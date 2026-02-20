@@ -5,7 +5,6 @@ import { applyOverdueLogic } from "@/lib/tasks";
 const AUTH_KEY = "chronel_user";
 const API = "http://localhost:5000/api/tasks";
 
-
 export function useAuth() {
   const [user, setUser] = useState<User | null>(() => {
     const stored = localStorage.getItem(AUTH_KEY);
@@ -26,12 +25,9 @@ export function useAuth() {
   return { user, login, logout };
 }
 
-
-
 export function useTasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
 
-  
   const fetchTasks = async () => {
     try {
       const res = await fetch(API);
@@ -46,10 +42,7 @@ export function useTasks() {
     fetchTasks();
   }, []);
 
-  
-  const addTask = async (
-    task: Omit<Task, "id" | "userId" | "createdAt">
-  ) => {
+  const addTask = async (task: Omit<Task, "id" | "userId" | "createdAt">) => {
     try {
       const res = await fetch(API, {
         method: "POST",
@@ -57,26 +50,19 @@ export function useTasks() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userId: "u1",
           ...task,
         }),
       });
 
       const newTask = await res.json();
 
-      setTasks((prev) =>
-        applyOverdueLogic([newTask, ...prev])
-      );
+      setTasks((prev) => applyOverdueLogic([newTask, ...prev]));
     } catch (err) {
       console.error("Add Task Failed:", err);
     }
   };
 
-  
-  const updateTask = async (
-    id: string,
-    updates: Partial<Task>
-  ) => {
+  const updateTask = async (id: number, updates: Partial<Task>) => {
     try {
       const res = await fetch(`${API}/${id}`, {
         method: "PUT",
@@ -89,56 +75,46 @@ export function useTasks() {
       const updated = await res.json();
 
       setTasks((prev) =>
-        applyOverdueLogic(
-          prev.map((t) => (t.id === id ? updated : t))
-        )
+        applyOverdueLogic(prev.map((t) => (t.id === id ? updated : t))),
       );
     } catch (err) {
       console.error("Update Task Failed:", err);
     }
   };
 
-  
-  const deleteTask = async (id: string) => {
+  const deleteTask = async (id: number) => {
     try {
       await fetch(`${API}/${id}`, {
         method: "DELETE",
       });
 
-      setTasks((prev) =>
-        prev.filter((t) => t.id !== id)
-      );
+      setTasks((prev) => prev.filter((t) => t.id !== id));
     } catch (err) {
       console.error("Delete Task Failed:", err);
     }
   };
 
-
-  const toggleComplete = async (id: string) => {
+  const toggleComplete = async (id: number) => {
     const task = tasks.find((t) => t.id === id);
     if (!task) return;
 
     const completed = task.status !== "completed";
 
     try {
-      const res = await fetch(`${API}/${id}`, {
+      const res = await fetch(`${API}/${id}/status`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           status: completed ? "completed" : "pending",
-          completedAt: completed
-            ? new Date().toISOString()
-            : null,
+          completedAt: completed ? new Date().toISOString() : null,
         }),
       });
 
       const updated = await res.json();
 
-      setTasks((prev) =>
-        prev.map((t) => (t.id === id ? updated : t))
-      );
+      setTasks((prev) => prev.map((t) => (t.id === id ? updated : t)));
     } catch (err) {
       console.error("Toggle Failed:", err);
     }

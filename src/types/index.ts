@@ -4,32 +4,32 @@ export type Priority = 'low' | 'medium' | 'high';
 export type TaskStatus = 'pending' | 'completed' | 'overdue';
 
 export interface Tag {
-  id: string;
+  id: number;
   name: string;
   color?: string;
 }
 
 export interface Task {
-  id: string;
+  id: number;
   title: string;
   description?: string;
-  dueDate: string; 
+  due_date: string; 
   status: TaskStatus;
   priority: Priority;
   tags: Tag[];
-  userId: string;
+  user_id: number;
   createdAt: string;
   completedAt?: string;
 }
 
 export interface User {
-  id: string;
+  id: number;
   name: string;
   email: string;
 }
 
 export interface UserPreferences {
-  userId: string;
+  user_id: number;
   theme: 'dark' | 'light';
 }
 

@@ -38,7 +38,7 @@ export default function AddTaskModal({
 }: AddTaskModalProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [dueDate, setDueDate] = useState("");
+  const [due_date, setDueDate] = useState("");
   const [priority, setPriority] = useState<Priority>("medium");
   const [selectedTags, setSelectedTags] = useState<TagType[]>([]);
 
@@ -54,19 +54,20 @@ export default function AddTaskModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !dueDate) return;
+    if (!title.trim() || !due_date) return;
     // console.log("Adding Task:", {
     //   title,
     //   description,
-    //   dueDate,
+    //   due_date,
     //   priority,
     //   selectedTags,
     // });
+
     onAdd({
       title: title.trim(),
       description: description.trim() || undefined,
-      dueDate,
-      status: 'pending',
+      due_date,
+      status: "pending",
       priority,
       tags: selectedTags,
     });
@@ -144,7 +145,7 @@ export default function AddTaskModal({
             </label>
             <input
               type="date"
-              value={dueDate}
+              value={due_date}
               onChange={(e) => setDueDate(e.target.value)}
               required
               min={new Date().toISOString().split("T")[0]}
@@ -214,7 +215,7 @@ export default function AddTaskModal({
             </button>
             <button
               type="submit"
-              disabled={!title.trim() || !dueDate}
+              disabled={!title.trim() || !due_date}
               className="flex-1 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary-glow transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Add Task
