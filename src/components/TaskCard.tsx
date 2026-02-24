@@ -14,7 +14,6 @@ function toLocalDate(dateStr: string) {
 
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }
-
 const priorityConfig = {
   low: {
     label: "Low",
@@ -42,6 +41,7 @@ export default function TaskCard({ task, onToggle, onDelete }: TaskCardProps) {
   const isOverdue = task.status === "overdue";
   const priority = priorityConfig[task.priority];
   const status = statusConfig[task.status];
+  // console.log("Rendering TaskCard:", task);
   return (
     <div
       className={cn(
@@ -117,12 +117,12 @@ export default function TaskCard({ task, onToggle, onDelete }: TaskCardProps) {
                 <div className="flex items-center gap-1">
                   <Tag className="h-3 w-3 text-muted-foreground" />
                   <div className="flex gap-1 flex-wrap">
-                    {task.tags.slice(0, 2).map((tag) => (
+                    {task.tags.slice(0, 2).map((tagName, index) => (
                       <span
-                        key={tag.id}
+                        key={index}
                         className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20"
                       >
-                        {tag.name}
+                        {tagName}
                       </span>
                     ))}
                     {task.tags.length > 2 && (

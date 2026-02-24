@@ -1,25 +1,27 @@
-import { Link, useLocation } from 'react-router-dom';
-import {
-  LayoutDashboard,
-  CheckSquare,
-  LogOut,
-  Zap,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { User } from '@/types';
+import { Link, useLocation } from "react-router-dom";
+import { LayoutDashboard, CheckSquare, LogOut, Zap, LogIn } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-interface SidebarProps {
-  user: User;
-  onLogout: () => void;
-}
+// 🔐 CLERK
+import {
+  SignedIn,
+  SignedOut,
+  SignInButton,
+  SignUpButton,
+  UserButton,
+  useUser,
+  useClerk,
+} from "@clerk/clerk-react";
 
 const navItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
-  { icon: CheckSquare, label: 'Tasks', href: '/tasks' },
+  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
+  { icon: CheckSquare, label: "Tasks", href: "/tasks" },
 ];
 
-export default function Sidebar({ user, onLogout }: SidebarProps) {
+export default function Sidebar() {
   const location = useLocation();
+  const { user } = useUser();
+  const { signOut } = useClerk();
 
   return (
     <aside className="flex h-screen w-60 flex-col border-r border-sidebar-border bg-sidebar">
@@ -42,16 +44,16 @@ export default function Sidebar({ user, onLogout }: SidebarProps) {
               key={href}
               to={href}
               className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
                 active
-                  ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                  : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
               )}
             >
               <Icon
                 className={cn(
-                  'h-4 w-4 flex-shrink-0',
-                  active ? 'text-primary' : 'text-sidebar-foreground'
+                  "h-4 w-4 flex-shrink-0",
+                  active ? "text-primary" : "text-sidebar-foreground",
                 )}
               />
               {label}
@@ -60,24 +62,48 @@ export default function Sidebar({ user, onLogout }: SidebarProps) {
         })}
       </nav>
 
-      {/* User */}
+      {/* 🔐 AUTH SECTION */}
       <div className="border-t border-sidebar-border p-4">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20 text-primary text-sm font-semibold flex-shrink-0">
-            {user.name.charAt(0).toUpperCase()}
+        <SignedOut>
+          <div className="flex flex-col gap-2">
+            <SignInButton mode="modal">
+              <button className="flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-sm bg-primary text-white hover:bg-primary-glow transition-colors">
+                <LogIn className="h-3.5 w-3.5" />
+                Sign In
+              </button>
+            </SignInButton>
+
+            <SignUpButton mode="modal">
+              <button className="flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-sm border border-border hover:bg-sidebar-accent transition-colors">
+                Create Account
+              </button>
+            </SignUpButton>
           </div>
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-sidebar-accent-foreground truncate">{user.name}</p>
-            <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+        </SignedOut>
+
+        <SignedIn>
+          <div className="flex items-center gap-3 mb-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20 text-primary text-sm font-semibold flex-shrink-0">
+              {user?.firstName?.charAt(0).toUpperCase()}
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-sidebar-accent-foreground truncate">
+                {user?.firstName}
+              </p>
+              <p className="text-xs text-muted-foreground truncate">
+                {user?.primaryEmailAddress?.emailAddress}
+              </p>
+            </div>
           </div>
-        </div>
-        <button
-          onClick={onLogout}
-          className="flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent transition-colors"
-        >
-          <LogOut className="h-3.5 w-3.5" />
-          Sign out
-        </button>
+
+          <button
+            onClick={async () => await signOut()}
+            className="flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent transition-colors"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            Sign out
+          </button>
+        </SignedIn>
       </div>
     </aside>
   );

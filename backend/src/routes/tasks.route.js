@@ -6,24 +6,26 @@ const router = express.Router();
 // GET ALL TASKS
 router.get("/", async (req, res) => {
   const { rows } = await pool.query(
-    "SELECT * FROM tasks ORDER BY created_at DESC",
+    "SELECT * FROM tasks WHERE clerk_id = $1 ORDER BY created_at DESC",
+    [req.query.clerk_id],
   );
   res.json(rows);
 });
 
 // ADD TASK
 router.post("/", async (req, res) => {
-  const { userId, title, description, due_date, priority } = req.body;
-  console.log("due date received:", due_date, typeof due_date);
+  const { clerk_id, title, description, due_date, priority, tags } = req.body;
+  const tagNames = tags?.map((tag) => tag.name) || [];
   const { rows } = await pool.query(
-    `INSERT INTO tasks (user_id, title, description, due_date, priority)
-   VALUES ($1, $2, $3, $4::DATE, $5)
-   RETURNING *`,
-    [1, title, description, due_date, priority],
+    `INSERT INTO tasks 
+    (clerk_id, title, description, due_date, priority, status, tags)
+    VALUES ($1, $2, $3, $4::DATE, $5, 'pending', $6)
+    RETURNING *`,
+    [clerk_id, title, description, due_date, priority, tagNames || []],
   );
-  // res.json(rows[0]);
+
   const task = rows[0];
-  console.log("Created Task:", task);
+
   res.json({
     id: task.id,
     title: task.title,
@@ -31,7 +33,7 @@ router.post("/", async (req, res) => {
     dueDate: task.due_date,
     status: task.status,
     priority: task.priority,
-    userId: task.user_id,
+    tags: task.tags,
     createdAt: task.created_at,
   });
 });

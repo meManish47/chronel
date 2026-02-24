@@ -6,24 +6,32 @@ const initDB = async () => {
     await pool.query(`
 CREATE TABLE IF NOT EXISTS users (
   id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+
+  clerk_id TEXT UNIQUE NOT NULL,
+
   public_id UUID DEFAULT gen_random_uuid() UNIQUE NOT NULL,
-  name TEXT NOT NULL,
-  email TEXT UNIQUE NOT NULL,
-  password_hash TEXT NOT NULL,
+
+  name TEXT,
+  email TEXT UNIQUE,
   gender TEXT,
+
   created_at TIMESTAMP DEFAULT NOW()
 );
 `);
 
     // TASKS
     await pool.query(`
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE IF NOT EXISTS tasks (
   id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  public_id UUID DEFAULT gen_random_uuid() UNIQUE NOT NULL,
-  name TEXT NOT NULL,
-  email TEXT UNIQUE NOT NULL,
-  password_hash TEXT NOT NULL,
-  gender TEXT,
+
+  clerk_id TEXT NOT NULL,
+
+  title TEXT NOT NULL,
+  description TEXT,
+  due_date DATE,
+  status TEXT,
+  priority TEXT,
+
   created_at TIMESTAMP DEFAULT NOW()
 );
 `);

@@ -13,6 +13,7 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
+import userSyncUser from "./hooks/userSyncUser";
 
 const queryClient = new QueryClient();
 const router = createBrowserRouter([
@@ -23,13 +24,16 @@ const router = createBrowserRouter([
   { path: "*", element: <NotFound /> },
 ]);
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <RouterProvider router={router} />
-    </TooltipProvider>
-  </QueryClientProvider>
+  userSyncUser(),
+  (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <RouterProvider router={router} />
+      </TooltipProvider>
+    </QueryClientProvider>
+  )
 );
 
 export default App;

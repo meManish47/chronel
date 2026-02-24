@@ -1,46 +1,50 @@
 import { useState, useEffect } from "react";
 import { Task, User } from "@/types";
 import { applyOverdueLogic } from "@/lib/tasks";
+import { useClerk, useUser } from "@clerk/clerk-react";
 
-const AUTH_KEY = "chronel_user";
-const API = "http://localhost:5000/api/tasks";
+// export function useAuth() {
+//   const [user, setUser] = useState<User | null>(() => {
+//     const stored = localStorage.getItem(AUTH_KEY);
+//     return stored ? JSON.parse(stored) : null;
+//   });
 
-export function useAuth() {
-  const [user, setUser] = useState<User | null>(() => {
-    const stored = localStorage.getItem(AUTH_KEY);
-    return stored ? JSON.parse(stored) : null;
-  });
+//   // const login = (email: string, name: string) => {
+//   //   const u: User = { id: 1, name, email };
+//   //   localStorage.setItem(AUTH_KEY, JSON.stringify(u));
+//   //   setUser(u);
+//   // };
 
-  const login = (email: string, name: string) => {
-    const u: User = { id: "u1", name, email };
-    localStorage.setItem(AUTH_KEY, JSON.stringify(u));
-    setUser(u);
-  };
+//   const logout = () => {
+//     localStorage.removeItem(AUTH_KEY);
+//     setUser(null);
+//   };
 
-  const logout = () => {
-    localStorage.removeItem(AUTH_KEY);
-    setUser(null);
-  };
-
-  return { user, login, logout };
-}
+//   return { user, login, logout };
+// }
 
 export function useTasks() {
+  const API = `${import.meta.env.VITE_API_URL}/api/tasks`;
+  const { user, isLoaded } = useUser();
   const [tasks, setTasks] = useState<Task[]>([]);
-
+  const [loadingTasks, setLoadingTasks] = useState(false);
   const fetchTasks = async () => {
     try {
-      const res = await fetch(API);
+      setLoadingTasks(true);
+      const res = await fetch(`${API}?clerk_id=${user?.id}`);
       const data = await res.json();
       setTasks(applyOverdueLogic(data));
     } catch (err) {
       console.error("Fetch Tasks Failed:", err);
+    } finally {
+      setLoadingTasks(false);
     }
   };
 
   useEffect(() => {
+    if (!isLoaded || !user) return;
     fetchTasks();
-  }, []);
+  }, [isLoaded, user]);
 
   const addTask = async (task: Omit<Task, "id" | "userId" | "createdAt">) => {
     try {
@@ -51,6 +55,7 @@ export function useTasks() {
         },
         body: JSON.stringify({
           ...task,
+          clerk_id: user?.id,
         }),
       });
 
@@ -127,5 +132,6 @@ export function useTasks() {
     updateTask,
     deleteTask,
     toggleComplete,
+    loadingTasks,
   };
 }
