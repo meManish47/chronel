@@ -15,7 +15,7 @@ import {
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
-  { icon: CheckSquare, label: "Tasks", href: "/tasks" },
+  // { icon: CheckSquare, label: "Tasks", href: "/tasks" },
 ];
 
 export default function Sidebar() {

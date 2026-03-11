@@ -5,9 +5,17 @@ const router = express.Router();
 
 // GET ALL TASKS
 router.get("/", async (req, res) => {
+  const clerk_id = req.query.clerk_id;
+  const user = await pool.query("SELECT * FROM users WHERE clerk_id = $1", [
+    clerk_id,
+  ]);
+  // console.log("User found:", user.rows[0]);
+  if (user.rows.length === 0) {
+    return res.status(404).json({ error: "User not found" });
+  }
   const { rows } = await pool.query(
-    "SELECT * FROM tasks WHERE clerk_id = $1 ORDER BY created_at DESC",
-    [req.query.clerk_id],
+    "SELECT * FROM tasks WHERE user_id = $1 ORDER BY created_at DESC",
+    [user.rows[0].id],
   );
   res.json(rows);
 });
@@ -15,13 +23,22 @@ router.get("/", async (req, res) => {
 // ADD TASK
 router.post("/", async (req, res) => {
   const { clerk_id, title, description, due_date, priority, tags } = req.body;
-  const tagNames = tags?.map((tag) => tag.name) || [];
+  const user = await pool.query("SELECT * FROM users WHERE clerk_id = $1", [
+    clerk_id,
+  ]);
+  if (user.rows.length === 0) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  // const tagNames = tags?.map((tag) => tag.name) || [];
+  // console.log("Received tags:", tagNames);
+  // console.log("Received tags object:", tags);
   const { rows } = await pool.query(
     `INSERT INTO tasks 
-    (clerk_id, title, description, due_date, priority, status, tags)
+    (user_id, title, description, due_date, priority, status, tags)
     VALUES ($1, $2, $3, $4::DATE, $5, 'pending', $6)
     RETURNING *`,
-    [clerk_id, title, description, due_date, priority, tagNames || []],
+    [user.rows[0].id, title, description, due_date, priority, tags || []],
   );
 
   const task = rows[0];

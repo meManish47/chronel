@@ -1,30 +1,25 @@
-import { useState } from "react";
+import AddTaskModal from "@/components/AddTaskModal";
+import Sidebar from "@/components/Sidebar";
+import StatsCard from "@/components/StatsCard";
+import TaskCard from "@/components/TaskCard";
+import { computeStats, filterTasks } from "@/lib/tasks";
+import { cn } from "@/lib/utils";
+import { FilterTab } from "@/types";
 import { format } from "date-fns";
 import {
+  AlertTriangle,
   CheckSquare,
   Clock,
-  AlertTriangle,
   ListTodo,
   Plus,
   Search,
 } from "lucide-react";
-import Sidebar from "@/components/Sidebar";
-import StatsCard from "@/components/StatsCard";
-import TaskCard from "@/components/TaskCard";
-import AddTaskModal from "@/components/AddTaskModal";
-import { useTasks } from "@/hooks/useChronel";
-import { computeStats, filterTasks } from "@/lib/tasks";
-import { FilterTab } from "@/types";
-import { cn } from "@/lib/utils";
-import { useNavigate } from "react-router-dom";
+import { useContext, useState } from "react";
 
-import {
-  SignedIn,
-  SignedOut,
-  RedirectToSignIn,
-  useUser,
-  useClerk,
-} from "@clerk/clerk-react";
+import { TaskContext } from "@/providers/tasksProvider";
+import { useClerk, useUser } from "@clerk/clerk-react";
+
+import { ListBucketsCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 
 const FILTER_TABS: { id: FilterTab; label: string }[] = [
   { id: "all", label: "All Tasks" },
@@ -34,13 +29,14 @@ const FILTER_TABS: { id: FilterTab; label: string }[] = [
 ];
 
 export default function Dashboard() {
+  const context = useContext(TaskContext);
   const { user, isLoaded } = useUser();
   const { signOut } = useClerk();
-  const { tasks, addTask, toggleComplete, deleteTask, loadingTasks } = useTasks();
-  const navigate = useNavigate();
+  const { tasks, addTask, toggleComplete, deleteTask, loadingTasks } = context;
   const [activeFilter, setActiveFilter] = useState<FilterTab>("all");
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
   const stats = computeStats(tasks);
 
   const filtered = filterTasks(tasks, activeFilter).filter((t) =>
@@ -49,7 +45,54 @@ export default function Dashboard() {
         t.tags.some((tag) => tag.toLowerCase().includes(search.toLowerCase()))
       : true,
   );
+  const handleUploadFile = async () => {
+    if (!file) {
+      console.error("No file selected");
+      return;
+    }
 
+    try {
+      console.log("Selected file:", file);
+
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/aws/buckets`,
+      );
+
+      const buckets = await response.json();
+      const bucketName = buckets.buckets[0].Name;
+      // console.log("Buckets:", buckets);
+
+      // console.log("Bucket:", bucketName);
+      const arrayBuffer = await file.arrayBuffer();
+      const command = new PutObjectCommand({
+        Bucket: bucketName,
+        Key: file.name,
+        Body: new Uint8Array(arrayBuffer),
+        ContentType: file.type,
+      });
+
+      const result = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/aws/uploadfile`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId: user.id,
+            bucketName,
+            key: file.name,
+            body: Array.from(new Uint8Array(arrayBuffer)),
+            contentType: file.type,
+          }),
+        },
+      ).then((res) => res.json());
+
+      console.log("File uploaded successfully:", result);
+    } catch (error) {
+      console.error("Error uploading file:", error);
+    }
+  };
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "Good morning";
@@ -59,14 +102,25 @@ export default function Dashboard() {
 
   return (
     <>
-      {/* <SignedOut>
-        <RedirectToSignIn redirectUrl="/dashboard" />
-      </SignedOut> */}
-
-      {/* <SignedIn> */}
       <div className="flex h-screen overflow-hidden bg-background">
         <Sidebar />
-
+        <div className="h-24 min-w-24">
+          <input
+            type="file"
+            accept=".jpg,.png,.jpeg"
+            onChange={(e) => {
+              if (e.target.files) {
+                setFile(e.target.files[0]);
+              }
+            }}
+          />
+          <button
+            onClick={handleUploadFile}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary-glow transition-colors shadow-accent"
+          >
+            Upload File
+          </button>
+        </div>
         <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
           <header className="flex-shrink-0 px-8 py-6 border-b border-border bg-background">
             <div className="flex items-start justify-between">

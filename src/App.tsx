@@ -14,13 +14,13 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import userSyncUser from "./hooks/userSyncUser";
+import { TaskProvider } from "./providers/tasksProvider";
 
 const queryClient = new QueryClient();
 const router = createBrowserRouter([
   { path: "/", element: <Index /> },
   { path: "/login", element: <Login /> },
   { path: "/dashboard", element: <Dashboard /> },
-  { path: "/tasks", element: <Dashboard /> },
   { path: "*", element: <NotFound /> },
 ]);
 const App = () => (
@@ -30,7 +30,9 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <RouterProvider router={router} />
+        <TaskProvider>
+          <RouterProvider router={router} />
+        </TaskProvider>
       </TooltipProvider>
     </QueryClientProvider>
   )

@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { X, Plus, Calendar, AlignLeft, Tag } from "lucide-react";
-import { Task, Priority, Tag as TagType } from "@/types";
+import { Task, Priority } from "@/types";
 import { SAMPLE_TAGS } from "@/lib/tasks";
 import { cn } from "@/lib/utils";
+
+type TagType = (typeof SAMPLE_TAGS)[number];
 
 interface AddTaskModalProps {
   open: boolean;
   onClose: () => void;
-  onAdd: (task: Omit<Task, "id" | "userId" | "createdAt">) => void;
+  onAdd: (task: Omit<Task, "id" | "userId" | "createdAt" | "user_id">) => void;
 }
 
 const PRIORITIES: { value: Priority; label: string; class: string }[] = [
@@ -69,7 +71,7 @@ export default function AddTaskModal({
       due_date,
       status: "pending",
       priority,
-      tags: selectedTags,
+      tags: selectedTags.map((tag) => tag.name),
     });
     setTitle("");
     setDescription("");

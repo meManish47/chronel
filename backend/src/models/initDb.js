@@ -24,14 +24,13 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS tasks (
   id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 
-  clerk_id TEXT NOT NULL,
-
+user_id INTEGER REFERENCES users(id),
   title TEXT NOT NULL,
   description TEXT,
   due_date DATE,
   status TEXT,
   priority TEXT,
-
+  tags TEXT[],
   created_at TIMESTAMP DEFAULT NOW()
 );
 `);
@@ -60,6 +59,21 @@ CREATE TABLE IF NOT EXISTS tags (
         theme TEXT DEFAULT 'dark'
       );
     `);
+    await pool.query(`
+CREATE TABLE IF NOT EXISTS notes (
+  id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  file_key TEXT NOT NULL,
+  file_url TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+`);
+
+    //     await pool.query(`
+    // CREATE INDEX IF NOT EXISTS idx_notes_user_id
+    // ON notes(user_id);
+    // `);
 
     console.log("✅ Tables created successfully");
   } catch (err) {
