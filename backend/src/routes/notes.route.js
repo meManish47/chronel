@@ -8,7 +8,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import pool from "../db/index.js";
-
+import axios from "axios";
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -25,10 +25,9 @@ const BUCKET = process.env.AWS_BUCKET_NAME || "amzn-s3-chronel-bucket";
 // ─── helpers ────────────────────────────────────────────────────────────────
 
 async function resolveDbUser(clerkId) {
-  const result = await pool.query(
-    "SELECT id FROM users WHERE clerk_id = $1",
-    [clerkId],
-  );
+  const result = await pool.query("SELECT id FROM users WHERE clerk_id = $1", [
+    clerkId,
+  ]);
   return result.rows[0] ?? null;
 }
 
@@ -77,7 +76,19 @@ router.post("/upload", upload.single("file"), async (req, res) => {
        RETURNING id, title, file_key, file_url, created_at`,
       [user.id, title, s3Key, file_url],
     );
-
+    // CALLING FastApi
+    axios
+      .post("http://127.0.0.1:8000/api/pdf/process", {
+        file_url: file_url,
+        note_id: rows[0].id,
+        clerk_id: clerkId,
+      })
+      .then(() => {
+        console.log("FastAPI processing started");
+      })
+      .catch((err) => {
+        console.error("FastAPI error:", err.message);
+      });
     return res.status(201).json(rows[0]);
   } catch (err) {
     console.error("Upload error:", err);
@@ -164,9 +175,7 @@ router.delete("/:id", async (req, res) => {
     const { file_key } = rows[0];
 
     // Remove from S3 first — if this fails we keep the DB record intact
-    await s3.send(
-      new DeleteObjectCommand({ Bucket: BUCKET, Key: file_key }),
-    );
+    await s3.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: file_key }));
 
     await pool.query("DELETE FROM notes WHERE id = $1", [id]);
 

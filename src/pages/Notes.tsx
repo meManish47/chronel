@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { useUser } from "@clerk/clerk-react";
 import { format } from "date-fns";
 import {
@@ -8,11 +8,16 @@ import {
   Upload,
   Search,
   Eye,
+  MessageCircle,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import FileUpload from "@/components/FileUpload";
 import FileViewer from "@/components/FileViewer";
+import NoteChat from "@/components/NoteChat";
 import { cn } from "@/lib/utils";
+import { TaskContext } from "@/providers/tasksProvider";
 
 interface Note {
   id: number;
@@ -55,12 +60,16 @@ function ExtBadge({ fileKey }: { fileKey: string }) {
 
 export default function Notes() {
   const { user, isLoaded } = useUser();
+  const taskCtx = useContext(TaskContext);
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [uploadOpen, setUploadOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [viewingNote, setViewingNote] = useState<Note | null>(null);
+  const [chatNote, setChatNote] = useState<Note | null>(null);
+  const [generatingId, setGeneratingId] = useState<number | null>(null);
+  const [genSuccess, setGenSuccess] = useState<number | null>(null);
 
   const fetchNotes = async () => {
     if (!user) return;
@@ -81,6 +90,33 @@ export default function Notes() {
   useEffect(() => {
     if (isLoaded && user) fetchNotes();
   }, [isLoaded, user]);
+
+  const handleGenerateTasks = async (e: React.MouseEvent, note: Note) => {
+    e.stopPropagation();
+    if (!user) return;
+    setGeneratingId(note.id);
+    setGenSuccess(null);
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/ai/generate-tasks`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ note_id: note.id, clerk_id: user.id }),
+        }
+      );
+      const data = await res.json();
+      if (data.tasks) {
+        setGenSuccess(note.id);
+        taskCtx?.fetchTasks(); // Refresh task list on Dashboard
+        setTimeout(() => setGenSuccess(null), 3000);
+      }
+    } catch (err) {
+      console.error("Generate tasks failed:", err);
+    } finally {
+      setGeneratingId(null);
+    }
+  };
 
   const handleDelete = async (e: React.MouseEvent, id: number) => {
     e.stopPropagation();
@@ -195,6 +231,18 @@ export default function Notes() {
                     >
                       <Eye className="h-3.5 w-3.5" />
                     </button>
+                    {/* <button
+                      onClick={(e) => handleGenerateTasks(e, note)}
+                      disabled={generatingId === note.id}
+                      className="rounded-md p-1.5 text-muted-foreground hover:text-yellow-400 hover:bg-secondary transition-colors disabled:opacity-40"
+                      title="Generate study tasks from this note"
+                    >
+                      {generatingId === note.id ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Sparkles className="h-3.5 w-3.5" />
+                      )}
+                    </button> */}
                     <button
                       onClick={(e) => handleDelete(e, note.id)}
                       disabled={deletingId === note.id}
@@ -205,9 +253,22 @@ export default function Notes() {
                     </button>
                   </div>
 
-                  <p className="absolute bottom-2.5 right-3 text-[9px] text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-                    click to preview
-                  </p>
+                  {/* Bottom label */}
+                  {genSuccess === note.id ? (
+                    <p className="absolute bottom-2.5 right-3 text-[9px] text-green-400 opacity-100">
+                      ✓ tasks added to dashboard
+                    </p>
+                  ) : (
+                    <div className="absolute bottom-2.5 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setChatNote(note); }}
+                        className="flex items-center gap-1.5 rounded-full bg-blue-600/20 text-blue-500 hover:bg-blue-600 hover:text-white px-3 py-1 text-xs font-semibold border border-blue-500/30 shadow-[0_0_10px_rgba(37,99,235,0.2)] hover:shadow-[0_0_15px_rgba(37,99,235,0.6)] transition-all duration-300"
+                      >
+                        <MessageCircle className="h-3.5 w-3.5" />
+                        Ask AI
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -218,6 +279,15 @@ export default function Notes() {
       {/* File viewer modal */}
       {viewingNote && (
         <FileViewer note={viewingNote} onClose={() => setViewingNote(null)} />
+      )}
+
+      {/* AI Chat panel */}
+      {chatNote && (
+        <NoteChat
+          noteId={chatNote.id}
+          noteTitle={chatNote.title}
+          onClose={() => setChatNote(null)}
+        />
       )}
 
       {/* Upload modal */}

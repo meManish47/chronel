@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+requests
+pdfminer.six
+langchain
+pinecone==8.1.2
+python-dotenv
+google-generativeai
+psycopg2-binary

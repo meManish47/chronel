@@ -6,6 +6,8 @@ import initDB from "./models/initDb.js";
 import tasksrouter from "./routes/tasks.route.js";
 import usersRouter from "./routes/users.route.js";
 import notesRouter from "./routes/notes.route.js";
+import aiRouter from "./routes/ai.route.js";
+
 dotenv.config();
 
 const PORT = process.env.PORT || 5000;
@@ -17,8 +19,10 @@ app.use(express.json());
 app.use("/api/tasks", tasksrouter);
 app.use("/api/users", usersRouter);
 app.use("/api/notes", notesRouter);
+app.use("/api/ai",    aiRouter);
 app.use("/api/aws", (await import("./routes/aws.route.js")).default);
 app.get("/", (req, res) => {
+
   res.send("Chronel API running 🚀");
 });
 await initDB();

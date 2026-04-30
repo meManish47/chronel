@@ -75,10 +75,39 @@ CREATE TABLE IF NOT EXISTS notes (
     // ON notes(user_id);
     // `);
 
+      await pool.query(`
+CREATE TABLE IF NOT EXISTS notes_chunks (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+
+  note_id INTEGER NOT NULL REFERENCES notes(id) ON DELETE CASCADE,
+
+  content TEXT NOT NULL,
+
+  chunk_index INTEGER NOT NULL,
+  page_number INTEGER,
+
+  -- metadata (VERY IMPORTANT)
+  token_count INTEGER,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+`);
+
+
+await pool.query(`
+CREATE INDEX IF NOT EXISTS idx_chunks_note_id
+ON notes_chunks(note_id);
+`);
+
+await pool.query(`
+CREATE INDEX IF NOT EXISTS idx_chunks_note_chunk
+ON notes_chunks(note_id, chunk_index);
+`);
+
     console.log("✅ Tables created successfully");
   } catch (err) {
     console.error(err);
   }
 };
+
 
 export default initDB;
