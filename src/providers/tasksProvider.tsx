@@ -45,23 +45,7 @@ export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
   }, [isLoaded, user]);
 
   const addTask = async (task: Omit<Task, "id" | "user_id" | "createdAt">) => {
-    // 1. Create a temporary optimistic task
-    const optimisticId = Date.now();
-    const optimisticTask: Task = {
-      ...task,
-      id: optimisticId,
-      user_id: -1,
-      createdAt: new Date().toISOString(),
-      status: task.status || "pending",
-      priority: task.priority || "medium",
-      tags: task.tags || [],
-    };
-
-    // 2. Immediately update the UI
-    setTasks((prev) => applyOverdueLogic([optimisticTask, ...prev]));
-
     try {
-      // 3. Send to backend
       const res = await fetch(API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -73,16 +57,10 @@ export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       const newTask = await res.json();
-      
-      // 4. Replace the temporary task with the real one from the DB
-      setTasks((prev) =>
-        applyOverdueLogic(prev.map((t) => (t.id === optimisticId ? newTask : t)))
-      );
-      
+      setTasks((prev) => applyOverdueLogic([newTask, ...prev]));
+      toast.success("Task added successfully");
     } catch (err) {
       console.error("Add Task Failed:", err);
-      // 5. Rollback on failure and notify the user
-      setTasks((prev) => prev.filter((t) => t.id !== optimisticId));
       toast.error("Failed to add task. Please try again.");
     }
   };

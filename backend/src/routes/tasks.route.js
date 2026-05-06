@@ -45,13 +45,14 @@ router.post("/", async (req, res) => {
 
   res.json({
     id: task.id,
+    user_id: task.user_id,
     title: task.title,
     description: task.description,
-    dueDate: task.due_date,
+    due_date: task.due_date,
     status: task.status,
     priority: task.priority,
     tags: task.tags,
-    createdAt: task.created_at,
+    created_at: task.created_at,
   });
 });
 
