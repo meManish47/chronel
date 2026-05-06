@@ -1,0 +1,59 @@
+services:
+  # 1. Node.js Backend API
+  - type: web
+    name: chronel-backend
+    env: node
+    rootDir: .
+    buildCommand: npm install
+    startCommand: npm run start:backend
+    envVars:
+      - key: PORT
+        value: 5001
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: CLERK_SECRET_KEY
+        sync: false
+      - key: AWS_REGION
+        sync: false
+      - key: AWS_BUCKET_NAME
+        sync: false
+
+  # 2. Python AI Service (FastAPI)
+  - type: web
+    name: chronel-ai-service
+    env: python
+    rootDir: ai-service
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: GROQ_API_KEY
+        sync: false
+      - key: PINECONE_API_KEY
+        sync: false
+      - key: PINECONE_INDEX
+        sync: false
+      - key: PINECONE_NAMESPACE
+        sync: false
+
+  # 3. React Frontend (Vite)
+  - type: web
+    name: chronel-frontend
+    env: static
+    rootDir: .
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://chronel-backend.onrender.com
+      - key: VITE_CLERK_PUBLISHABLE_KEY
+        sync: false
+      - key: VITE_AWS_ACCESS_KEY_ID
+        sync: false
+      - key: VITE_AWS_SECRET
+        sync: false

@@ -1,4 +1,4 @@
-import google.generativeai as genai
+from google import genai
 import os
 import json
 from datetime import date, timedelta
@@ -10,16 +10,15 @@ load_dotenv()
 
 _api_key = os.getenv("GEMINI_API_KEY", "")
 if _api_key:
-    genai.configure(api_key=_api_key)
-    _model = genai.GenerativeModel("gemini-1.0-pro")
+    client = genai.Client(api_key=_api_key)
 else:
-    _model = None
+    client = None
 
 
 def generate_tasks_from_note(note_id: int) -> list[dict]:
     """Fetch all chunks for a note from PostgreSQL, call Gemini to generate study tasks."""
 
-    if not _model:
+    if not client:
         raise ValueError("GEMINI_API_KEY is not configured. Add it to your .env file.")
 
     # ── 1. Fetch all chunks from PostgreSQL ───────────────────────────
@@ -74,7 +73,10 @@ Rules:
 - Last task should be "low" priority (review/summarize)
 - Make tasks specific to the actual content, not generic"""
 
-    response = _model.generate_content(prompt)
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt,
+    )
     raw = response.text.strip()
 
     # Strip markdown fences if Gemini wraps them

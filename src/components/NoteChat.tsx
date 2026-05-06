@@ -132,7 +132,7 @@ export default function NoteChat({ noteId, noteTitle, onClose }: NoteChatProps) 
 
               {/* Bubble */}
               <div
-                className={`max-w-[82%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
+                className={`max-w-[82%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${
                   msg.role === "assistant"
                     ? "bg-secondary text-foreground rounded-tl-none"
                     : "bg-primary text-primary-foreground rounded-tr-none"

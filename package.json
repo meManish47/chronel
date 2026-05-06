@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "backend": "nodemon backend/src/server.js",
+    "start:backend": "node backend/src/server.js",
     "frontend": "vite",
     "fastapi:setup": "ai-service/.venv/bin/python -m pip install -r ai-service/requirements.txt",
     "fastapi": "npm run fastapi:setup && ai-service/.venv/bin/python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000 --app-dir ai-service",

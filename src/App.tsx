@@ -34,7 +34,7 @@ const App = () => (
           <div style={{ paddingBottom: 52 }}>
             <RouterProvider router={router} />
           </div>
-          <MusicPlayer />
+          {/* <MusicPlayer /> */}
         </TaskProvider>
       </TooltipProvider>
     </QueryClientProvider>
