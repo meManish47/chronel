@@ -12,6 +12,7 @@ interface TaskContextType {
   toggleComplete: (id: number) => Promise<void>;
   deleteTask: (id: number) => Promise<void>;
   loadingTasks: boolean;
+  isAddingTask: boolean;
 }
 
 export const TaskContext = createContext<TaskContextType | null>(null);
@@ -23,6 +24,7 @@ export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
   // const {getToken} = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loadingTasks, setLoadingTasks] = useState(false);
+  const [isAddingTask, setIsAddingTask] = useState(false);
 
   const fetchTasks = async () => {
     if (!user) return;
@@ -45,6 +47,7 @@ export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
   }, [isLoaded, user]);
 
   const addTask = async (task: Omit<Task, "id" | "user_id" | "createdAt">) => {
+    setIsAddingTask(true);
     try {
       const res = await fetch(API, {
         method: "POST",
@@ -62,6 +65,8 @@ export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (err) {
       console.error("Add Task Failed:", err);
       toast.error("Failed to add task. Please try again.");
+    } finally {
+      setIsAddingTask(false);
     }
   };
 
@@ -125,6 +130,7 @@ export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
         deleteTask,
         toggleComplete,
         loadingTasks,
+        isAddingTask,
       }}
     >
       {children}

@@ -32,7 +32,7 @@ export default function Dashboard() {
   const context = useContext(TaskContext);
   const { user, isLoaded } = useUser();
   const { signOut } = useClerk();
-  const { tasks, addTask, toggleComplete, deleteTask, loadingTasks } = context;
+  const { tasks, addTask, toggleComplete, deleteTask, loadingTasks, isAddingTask } = context;
   const [activeFilter, setActiveFilter] = useState<FilterTab>("all");
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
@@ -152,7 +152,7 @@ export default function Dashboard() {
                 <div className="flex items-center justify-center py-16">
                   <div className="h-8 w-8 rounded-full border-4 border-muted border-t-primary animate-spin" />
                 </div>
-              ) : !loadingTasks && filtered.length === 0 ? (
+              ) : !loadingTasks && filtered.length === 0 && !isAddingTask ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
                   <div className="h-12 w-12 rounded-2xl bg-secondary flex items-center justify-center mb-4">
                     <CheckSquare className="h-6 w-6 text-muted-foreground" />
@@ -167,15 +167,30 @@ export default function Dashboard() {
                   </p>
                 </div>
               ) : (
-                filtered.map((task) => (
-                  <div key={task.id} className="animate-fade-in">
-                    <TaskCard
-                      task={task}
-                      onToggle={toggleComplete}
-                      onDelete={deleteTask}
-                    />
-                  </div>
-                ))
+                <>
+                  {isAddingTask && (
+                    <div className="animate-pulse flex items-start gap-4 rounded-xl border p-4 bg-card opacity-60">
+                      <div className="mt-0.5 h-5 w-5 rounded-full bg-muted flex-shrink-0" />
+                      <div className="flex-1 space-y-3">
+                        <div className="h-4 bg-muted rounded w-1/3" />
+                        <div className="h-3 bg-muted rounded w-1/2" />
+                        <div className="flex gap-2">
+                           <div className="h-3 w-16 bg-muted rounded" />
+                           <div className="h-3 w-12 bg-muted rounded" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {filtered.map((task) => (
+                    <div key={task.id} className="animate-fade-in">
+                      <TaskCard
+                        task={task}
+                        onToggle={toggleComplete}
+                        onDelete={deleteTask}
+                      />
+                    </div>
+                  ))}
+                </>
               )}
             </div>
           </div>
