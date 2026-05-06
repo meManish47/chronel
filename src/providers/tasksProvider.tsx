@@ -2,6 +2,7 @@ import { applyOverdueLogic } from "@/lib/tasks";
 import { Task } from "@/types";
 import { useAuth, useUser } from "@clerk/clerk-react";
 import { createContext, useEffect, useState, useContext } from "react";
+import { toast } from "sonner";
 
 interface TaskContextType {
   tasks: Task[];
@@ -43,19 +44,46 @@ export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
     fetchTasks();
   }, [isLoaded, user]);
 
-  const addTask = async (task: Omit<Task, "id" | "userId" | "createdAt">) => {
-    console.log("Adding Task:", task);
+  const addTask = async (task: Omit<Task, "id" | "user_id" | "createdAt">) => {
+    // 1. Create a temporary optimistic task
+    const optimisticId = Date.now();
+    const optimisticTask: Task = {
+      ...task,
+      id: optimisticId,
+      user_id: -1,
+      createdAt: new Date().toISOString(),
+      status: task.status || "pending",
+      priority: task.priority || "medium",
+      tags: task.tags || [],
+    };
+
+    // 2. Immediately update the UI
+    setTasks((prev) => applyOverdueLogic([optimisticTask, ...prev]));
+
     try {
+      // 3. Send to backend
       const res = await fetch(API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...task, clerk_id: user?.id }),
       });
 
+      if (!res.ok) {
+        throw new Error("Server returned an error");
+      }
+
       const newTask = await res.json();
-      setTasks((prev) => applyOverdueLogic([newTask, ...prev]));
+      
+      // 4. Replace the temporary task with the real one from the DB
+      setTasks((prev) =>
+        applyOverdueLogic(prev.map((t) => (t.id === optimisticId ? newTask : t)))
+      );
+      
     } catch (err) {
       console.error("Add Task Failed:", err);
+      // 5. Rollback on failure and notify the user
+      setTasks((prev) => prev.filter((t) => t.id !== optimisticId));
+      toast.error("Failed to add task. Please try again.");
     }
   };
 
