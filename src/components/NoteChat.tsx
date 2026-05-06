@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { X, Send, Loader2, Bot, User, BookOpen } from "lucide-react";
 
-const FASTAPI = "http://localhost:8000";
+const FASTAPI = import.meta.env.VITE_AI_SERVICE_URL || "http://localhost:8000";
 
 interface Message {
   role: "user" | "assistant";

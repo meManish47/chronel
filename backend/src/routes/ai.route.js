@@ -3,7 +3,7 @@ import axios from "axios";
 import pool from "../db/index.js";
 
 const router = express.Router();
-const FASTAPI = process.env.FASTAPI_URL || "http://127.0.0.1:8000";
+const FASTAPI = process.env.AI_SERVICE_URL || "http://127.0.0.1:8000";
 
 /**
  * POST /api/ai/generate-tasks

@@ -77,8 +77,9 @@ router.post("/upload", upload.single("file"), async (req, res) => {
       [user.id, title, s3Key, file_url],
     );
     // CALLING FastApi
+    const aiServiceUrl = process.env.AI_SERVICE_URL || "http://127.0.0.1:8000";
     axios
-      .post("http://127.0.0.1:8000/api/pdf/process", {
+      .post(`${aiServiceUrl}/api/pdf/process`, {
         file_url: file_url,
         note_id: rows[0].id,
         clerk_id: clerkId,
