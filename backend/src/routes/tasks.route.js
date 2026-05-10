@@ -17,7 +17,21 @@ router.get("/", async (req, res) => {
     "SELECT * FROM tasks WHERE user_id = $1 ORDER BY created_at DESC",
     [user.rows[0].id],
   );
-  res.json(rows);
+  const normalized = rows.map((task) => ({
+    id: task.id,
+    user_id: task.user_id,
+    title: task.title,
+    description: task.description,
+    due_date: task.due_date
+      ? task.due_date.toISOString().split("T")[0]
+      : null,
+    status: task.status,
+    priority: task.priority,
+    tags: task.tags ?? [],
+    createdAt: task.created_at?.toISOString(),
+    completedAt: task.completed_at?.toISOString() ?? null,
+  }));
+  res.json(normalized);
 });
 
 // ADD TASK
@@ -88,7 +102,21 @@ router.patch("/:id/status", async (req, res) => {
       WHERE id=$2 RETURNING *`,
     [status, id],
   );
-  res.json(rows[0]);
+  const task = rows[0];
+  res.json({
+    id: task.id,
+    user_id: task.user_id,
+    title: task.title,
+    description: task.description,
+    due_date: task.due_date
+      ? task.due_date.toISOString().split("T")[0]
+      : null,
+    status: task.status,
+    priority: task.priority,
+    tags: task.tags ?? [],
+    createdAt: task.created_at?.toISOString(),
+    completedAt: task.completed_at?.toISOString() ?? null,
+  });
 });
 
 export default router;

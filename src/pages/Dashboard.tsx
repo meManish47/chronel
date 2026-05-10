@@ -41,7 +41,8 @@ export default function Dashboard() {
   const filtered = filterTasks(tasks, activeFilter).filter((t) =>
     search
       ? t.title.toLowerCase().includes(search.toLowerCase()) ||
-        t.tags.some((tag) => tag.toLowerCase().includes(search.toLowerCase()))
+        t.description?.toLowerCase().includes(search.toLowerCase()) ||
+        (t.tags ?? []).some((tag) => tag.toLowerCase().includes(search.toLowerCase()))
       : true,
   );
  
