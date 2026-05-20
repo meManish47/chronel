@@ -1,5 +1,6 @@
 import { useEffect, useState, useContext } from "react";
-import { useUser } from "@clerk/clerk-react";
+import { useUser, useClerk } from "@clerk/clerk-react";
+import { toast } from "sonner";
 import { format } from "date-fns";
 import {
   FileText,
@@ -60,6 +61,7 @@ function ExtBadge({ fileKey }: { fileKey: string }) {
 
 export default function Notes() {
   const { user, isLoaded } = useUser();
+  const { openSignIn } = useClerk();
   const taskCtx = useContext(TaskContext);
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
@@ -152,7 +154,15 @@ export default function Notes() {
               </p>
             </div>
             <button
-              onClick={() => setUploadOpen(true)}
+              onClick={() => {
+                if (!isLoaded) return;
+                if (!user) {
+                  toast.error("Please sign in to upload files");
+                  openSignIn?.();
+                  return;
+                }
+                setUploadOpen(true);
+              }}
               className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary-glow transition-colors"
             >
               <Upload className="h-4 w-4" />
@@ -187,7 +197,15 @@ export default function Notes() {
               </p>
               {!search && (
                 <button
-                  onClick={() => setUploadOpen(true)}
+                  onClick={() => {
+                    if (!isLoaded) return;
+                    if (!user) {
+                      toast.error("Please sign in to upload files");
+                      openSignIn?.();
+                      return;
+                    }
+                    setUploadOpen(true);
+                  }}
                   className="mt-3 text-xs text-primary underline hover:text-primary-glow"
                 >
                   Upload your first file

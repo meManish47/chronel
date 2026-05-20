@@ -18,6 +18,7 @@ import { useContext, useState } from "react";
 
 import { TaskContext } from "@/providers/tasksProvider";
 import { useClerk, useUser } from "@clerk/clerk-react";
+import { toast } from "sonner";
 
 import { ListBucketsCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 
@@ -31,7 +32,7 @@ const FILTER_TABS: { id: FilterTab; label: string }[] = [
 export default function Dashboard() {
   const context = useContext(TaskContext);
   const { user, isLoaded } = useUser();
-  const { signOut } = useClerk();
+  const { signOut, openSignIn } = useClerk();
   const { tasks, addTask, toggleComplete, deleteTask, loadingTasks, isAddingTask } = context;
   const [activeFilter, setActiveFilter] = useState<FilterTab>("all");
   const [search, setSearch] = useState("");
@@ -78,7 +79,15 @@ export default function Dashboard() {
               </div>
 
               <button
-                onClick={() => setModalOpen(true)}
+                onClick={() => {
+                  if (!isLoaded) return;
+                  if (!user) {
+                    toast.error("Please sign in to add tasks");
+                    openSignIn?.();
+                    return;
+                  }
+                  setModalOpen(true);
+                }}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary-glow transition-colors shadow-accent"
               >
                 <Plus className="h-4 w-4" />
