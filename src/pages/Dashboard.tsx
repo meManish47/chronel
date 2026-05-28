@@ -13,8 +13,11 @@ import {
   ListTodo,
   Plus,
   Search,
+  Menu,
+  Zap,
 } from "lucide-react";
 import { useContext, useState } from "react";
+import { Sheet, SheetContent, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 
 import { TaskContext } from "@/providers/tasksProvider";
 import { useClerk, useUser } from "@clerk/clerk-react";
@@ -37,6 +40,7 @@ export default function Dashboard() {
   const [activeFilter, setActiveFilter] = useState<FilterTab>("all");
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const stats = computeStats(tasks);
 
   const filtered = filterTasks(tasks, activeFilter).filter((t) =>
@@ -56,20 +60,50 @@ export default function Dashboard() {
 
   return (
     <>
-      <div className="flex h-screen overflow-hidden bg-background">
-        <Sidebar />
+      <div className="flex h-screen overflow-hidden bg-background flex-col md:flex-row">
+        {/* Mobile Header Bar */}
+        <header className="flex md:hidden items-center justify-between px-4 py-3 border-b border-border bg-sidebar flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+              <Zap className="h-4 w-4 text-primary-foreground" />
+            </div>
+            <span className="text-base font-semibold tracking-tight text-foreground">
+              Chronel
+            </span>
+          </div>
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="p-2 rounded-lg hover:bg-secondary text-foreground transition-colors"
+            aria-label="Open navigation menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+        </header>
+
+        <Sidebar className="hidden md:flex h-screen" />
+
+        {/* Mobile Navigation Drawer */}
+        <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+          <SheetContent side="left" className="p-0 w-60 border-r-0 bg-sidebar">
+            <div className="sr-only">
+              <SheetTitle>Navigation Menu</SheetTitle>
+              <SheetDescription>Access Dashboard and Notes pages</SheetDescription>
+            </div>
+            <Sidebar className="w-full h-full border-r-0" onClose={() => setSidebarOpen(false)} />
+          </SheetContent>
+        </Sheet>
         
         <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          <header className="flex-shrink-0 px-8 py-6 border-b border-border bg-background">
-            <div className="flex items-start justify-between">
-              <div>
+          <header className="flex-shrink-0 px-4 md:px-8 py-4 md:py-6 border-b border-border bg-background">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
                 <p className="text-xs text-muted-foreground mb-1">
                   {format(new Date(), "EEEE, MMMM d, yyyy")}
                 </p>
-                <h1 className="text-xl font-semibold text-foreground">
+                <h1 className="text-xl font-semibold text-foreground truncate">
                   {getGreeting()}, {user?.firstName || "User"} 👋
                 </h1>
-                <p className="text-sm text-muted-foreground mt-0.5">
+                <p className="text-sm text-muted-foreground mt-0.5 truncate">
                   {stats.pending > 0
                     ? `You have ${stats.pending} pending task${
                         stats.pending > 1 ? "s" : ""
@@ -88,17 +122,18 @@ export default function Dashboard() {
                   }
                   setModalOpen(true);
                 }}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary-glow transition-colors shadow-accent"
+                className="flex items-center justify-center h-10 w-10 md:w-auto md:h-auto gap-2 px-3 py-2 md:px-4 md:py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary-glow transition-colors shadow-accent flex-shrink-0 animate-fade-in"
+                title="Add Task"
               >
                 <Plus className="h-4 w-4" />
-                Add Task
+                <span className="hidden md:inline">Add Task</span>
               </button>
             </div>
           </header>
 
-          <div className="flex-1 overflow-y-auto scrollbar-thin px-8 py-6 space-y-6">
+          <div className="flex-1 overflow-y-auto scrollbar-thin px-4 md:px-8 py-4 md:py-6 space-y-5 md:space-y-6">
             {/* Stats */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
               <StatsCard
                 label="Total"
                 value={stats.total}
@@ -126,14 +161,14 @@ export default function Dashboard() {
             </div>
 
             {/* Filters + Search */}
-            <div className="flex items-center gap-4 flex-wrap">
-              <div className="flex gap-0.5 p-1 rounded-lg bg-secondary border border-border">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 md:gap-4 flex-wrap">
+              <div className="flex gap-0.5 p-1 rounded-lg bg-secondary border border-border overflow-x-auto scrollbar-none">
                 {FILTER_TABS.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveFilter(tab.id)}
                     className={cn(
-                      "px-3.5 py-1.5 rounded-md text-xs font-medium transition-all duration-150",
+                      "px-2.5 sm:px-3.5 py-1.5 rounded-md text-[11px] sm:text-xs font-medium transition-all duration-150 whitespace-nowrap",
                       activeFilter === tab.id
                         ? "bg-background-elevated text-foreground shadow-sm"
                         : "text-muted-foreground hover:text-foreground",
@@ -144,7 +179,7 @@ export default function Dashboard() {
                 ))}
               </div>
 
-              <div className="relative flex-1 min-w-48 max-w-64">
+              <div className="relative flex-1 min-w-[200px] sm:max-w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                 <input
                   type="text"

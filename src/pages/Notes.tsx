@@ -12,6 +12,8 @@ import {
   MessageCircle,
   Sparkles,
   Loader2,
+  Menu,
+  Zap,
 } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import FileUpload from "@/components/FileUpload";
@@ -19,6 +21,7 @@ import FileViewer from "@/components/FileViewer";
 import NoteChat from "@/components/NoteChat";
 import { cn } from "@/lib/utils";
 import { TaskContext } from "@/providers/tasksProvider";
+import { Sheet, SheetContent, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 
 interface Note {
   id: number;
@@ -72,6 +75,7 @@ export default function Notes() {
   const [chatNote, setChatNote] = useState<Note | null>(null);
   const [generatingId, setGeneratingId] = useState<number | null>(null);
   const [genSuccess, setGenSuccess] = useState<number | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const fetchNotes = async () => {
     if (!user) return;
@@ -90,7 +94,13 @@ export default function Notes() {
   };
 
   useEffect(() => {
-    if (isLoaded && user) fetchNotes();
+    if (isLoaded) {
+      if (user) {
+        fetchNotes();
+      } else {
+        setLoading(false);
+      }
+    }
   }, [isLoaded, user]);
 
   const handleGenerateTasks = async (e: React.MouseEvent, note: Note) => {
@@ -141,15 +151,45 @@ export default function Notes() {
   );
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      <Sidebar />
+    <div className="flex h-screen overflow-hidden bg-background flex-col md:flex-row">
+      {/* Mobile Header Bar */}
+      <header className="flex md:hidden items-center justify-between px-4 py-3 border-b border-border bg-sidebar flex-shrink-0">
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+            <Zap className="h-4 w-4 text-primary-foreground" />
+          </div>
+          <span className="text-base font-semibold tracking-tight text-foreground">
+            Chronel
+          </span>
+        </div>
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="p-2 rounded-lg hover:bg-secondary text-foreground transition-colors"
+          aria-label="Open navigation menu"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+      </header>
+
+      <Sidebar className="hidden md:flex h-screen" />
+
+      {/* Mobile Navigation Drawer */}
+      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+        <SheetContent side="left" className="p-0 w-60 border-r-0 bg-sidebar">
+          <div className="sr-only">
+            <SheetTitle>Navigation Menu</SheetTitle>
+            <SheetDescription>Access Dashboard and Notes pages</SheetDescription>
+          </div>
+          <Sidebar className="w-full h-full border-r-0" onClose={() => setSidebarOpen(false)} />
+        </SheetContent>
+      </Sheet>
 
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="flex-shrink-0 px-8 py-6 border-b border-border bg-background">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl font-semibold text-foreground">My Notes</h1>
-              <p className="text-sm text-muted-foreground mt-0.5">
+        <header className="flex-shrink-0 px-4 md:px-8 py-4 md:py-6 border-b border-border bg-background">
+          <div className="flex items-center justify-between gap-4">
+            <div className="min-w-0">
+              <h1 className="text-xl font-semibold text-foreground truncate">My Notes</h1>
+              <p className="text-sm text-muted-foreground mt-0.5 truncate">
                 {notes.length} file{notes.length !== 1 ? "s" : ""} uploaded
               </p>
             </div>
@@ -163,16 +203,17 @@ export default function Notes() {
                 }
                 setUploadOpen(true);
               }}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary-glow transition-colors"
+              className="flex items-center justify-center h-10 w-10 md:w-auto md:h-auto gap-2 px-3 py-2 md:px-4 md:py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary-glow transition-colors flex-shrink-0"
+              title="Upload file"
             >
               <Upload className="h-4 w-4" />
-              Upload file
+              <span className="hidden md:inline">Upload file</span>
             </button>
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto scrollbar-thin px-8 py-6 space-y-4">
-          <div className="relative max-w-72">
+        <div className="flex-1 overflow-y-auto scrollbar-thin px-4 md:px-8 py-4 md:py-6 space-y-4">
+          <div className="relative w-full max-w-72">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <input
               type="text"
@@ -186,6 +227,24 @@ export default function Notes() {
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <div className="h-8 w-8 rounded-full border-4 border-muted border-t-primary animate-spin" />
+            </div>
+          ) : !user ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center animate-fade-in">
+              <div className="h-12 w-12 rounded-2xl bg-secondary flex items-center justify-center mb-4">
+                <FileText className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <p className="text-sm font-medium text-foreground mb-1">
+                Please sign in to upload or view notes
+              </p>
+              <p className="text-xs text-muted-foreground max-w-sm px-4">
+                Join Chronel to sync your study materials and query them using our AI assistant.
+              </p>
+              <button
+                onClick={() => openSignIn?.()}
+                className="mt-4 rounded-lg bg-primary px-5 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary-glow transition-all duration-200 shadow-accent"
+              >
+                Sign In
+              </button>
             </div>
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -218,27 +277,29 @@ export default function Notes() {
                 <div
                   key={note.id}
                   onClick={() => setViewingNote(note)}
-                  className="group relative flex items-start gap-3 rounded-xl border border-border bg-card p-4 hover:bg-background-elevated hover:border-border-subtle transition-all duration-200 cursor-pointer"
+                  className="group relative flex flex-col md:flex-row items-stretch md:items-start gap-3 rounded-xl border border-border bg-card p-4 hover:bg-background-elevated hover:border-border-subtle transition-all duration-200 cursor-pointer"
                 >
-                  <FileIcon fileKey={note.file_key} />
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    <FileIcon fileKey={note.file_key} />
 
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                      <p className="text-sm font-medium text-foreground truncate">
-                        {note.title}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                        <p className="text-sm font-medium text-foreground truncate">
+                          {note.title}
+                         </p>
+                        <ExtBadge fileKey={note.file_key} />
+                      </div>
+                      <p className="text-[10px] text-muted-foreground font-mono truncate">
+                        {note.file_key.split("/").pop()}
                       </p>
-                      <ExtBadge fileKey={note.file_key} />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {format(new Date(note.created_at), "MMM d, yyyy")}
+                      </p>
                     </div>
-                    <p className="text-[10px] text-muted-foreground font-mono truncate">
-                      {note.file_key.split("/").pop()}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {format(new Date(note.created_at), "MMM d, yyyy")}
-                    </p>
                   </div>
 
-                  {/* Hover action buttons */}
-                  <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {/* Desktop Hover action buttons */}
+                  <div className="absolute top-3 right-3 hidden md:flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -249,18 +310,6 @@ export default function Notes() {
                     >
                       <Eye className="h-3.5 w-3.5" />
                     </button>
-                    {/* <button
-                      onClick={(e) => handleGenerateTasks(e, note)}
-                      disabled={generatingId === note.id}
-                      className="rounded-md p-1.5 text-muted-foreground hover:text-yellow-400 hover:bg-secondary transition-colors disabled:opacity-40"
-                      title="Generate study tasks from this note"
-                    >
-                      {generatingId === note.id ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <Sparkles className="h-3.5 w-3.5" />
-                      )}
-                    </button> */}
                     <button
                       onClick={(e) => handleDelete(e, note.id)}
                       disabled={deletingId === note.id}
@@ -271,22 +320,53 @@ export default function Notes() {
                     </button>
                   </div>
 
-                  {/* Bottom label */}
-                  {genSuccess === note.id ? (
-                    <p className="absolute bottom-2.5 right-3 text-[9px] text-green-400 opacity-100">
-                      ✓ tasks added to dashboard
-                    </p>
-                  ) : (
-                    <div className="absolute bottom-2.5 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setChatNote(note); }}
-                        className="flex items-center gap-1.5 rounded-full bg-blue-600/20 text-blue-500 hover:bg-blue-600 hover:text-white px-3 py-1 text-xs font-semibold border border-blue-500/30 shadow-[0_0_10px_rgba(37,99,235,0.2)] hover:shadow-[0_0_15px_rgba(37,99,235,0.6)] transition-all duration-300"
-                      >
-                        <MessageCircle className="h-3.5 w-3.5" />
-                        Ask AI
-                      </button>
-                    </div>
-                  )}
+                  {/* Desktop Bottom label */}
+                  <div className="absolute bottom-2.5 right-3 hidden md:block">
+                    {genSuccess === note.id ? (
+                      <p className="text-[9px] text-green-400 opacity-100">
+                        ✓ tasks added to dashboard
+                      </p>
+                    ) : (
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setChatNote(note); }}
+                          className="flex items-center gap-1.5 rounded-full bg-blue-600/20 text-blue-500 hover:bg-blue-600 hover:text-white px-3 py-1 text-xs font-semibold border border-blue-500/30 shadow-[0_0_10px_rgba(37,99,235,0.2)] hover:shadow-[0_0_15px_rgba(37,99,235,0.6)] transition-all duration-300"
+                        >
+                          <MessageCircle className="h-3.5 w-3.5" />
+                          Ask AI
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Mobile Action Bar (Visible only on touch/mobile screens, under the card divider) */}
+                  <div 
+                    className="flex md:hidden items-center justify-end gap-2 mt-2 pt-2 border-t border-border/40 w-full"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      onClick={() => setViewingNote(note)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-muted-foreground bg-secondary hover:text-foreground transition-colors"
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                      Preview
+                    </button>
+                    <button
+                      onClick={() => setChatNote(note)}
+                      className="flex items-center gap-1.5 rounded-full bg-blue-600/20 text-blue-500 px-3 py-1.5 text-xs font-semibold border border-blue-500/30"
+                    >
+                      <MessageCircle className="h-3.5 w-3.5" />
+                      Ask AI
+                    </button>
+                    <button
+                      onClick={(e) => handleDelete(e, note.id)}
+                      disabled={deletingId === note.id}
+                      className="flex items-center justify-center rounded-lg p-1.5 text-muted-foreground bg-secondary hover:text-destructive transition-colors disabled:opacity-40"
+                      title="Delete"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

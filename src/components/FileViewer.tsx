@@ -50,11 +50,11 @@ export default function FileViewer({ note, onClose }: FileViewerProps) {
     <div
       ref={overlayRef}
       onClick={handleOverlayClick}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-2 sm:p-4"
     >
-      <div className="flex flex-col w-full max-w-4xl max-h-[90vh] rounded-2xl border border-border bg-card shadow-lg animate-scale-in overflow-hidden">
+      <div className="flex flex-col w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] h-full sm:h-auto rounded-xl sm:rounded-2xl border border-border bg-card shadow-lg animate-scale-in overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between gap-4 px-5 py-4 border-b border-border flex-shrink-0">
+        <div className="flex items-center justify-between gap-2 sm:gap-4 px-4 sm:px-5 py-3 sm:py-4 border-b border-border flex-shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10">
               {isPDF(ext) ? (
@@ -79,22 +79,22 @@ export default function FileViewer({ note, onClose }: FileViewerProps) {
             <a
               href={note.file_url}
               download={filename}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
               title="Download"
             >
               <Download className="h-3.5 w-3.5" />
-              Download
+              <span className="hidden sm:inline">Download</span>
             </a>
             {/* Open in new tab */}
             <a
               href={note.file_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
               title="Open in new tab"
             >
               <ExternalLink className="h-3.5 w-3.5" />
-              Open
+              <span className="hidden sm:inline">Open</span>
             </a>
             {/* Close */}
             <button
@@ -114,18 +114,18 @@ export default function FileViewer({ note, onClose }: FileViewerProps) {
             <iframe
               src={note.file_url}
               title={note.title}
-              className="w-full h-full min-h-[60vh]"
+              className="w-full h-full min-h-[50vh] sm:min-h-[60vh]"
               style={{ border: "none" }}
             />
           )}
 
           {isImage(ext) && (
-            <div className="flex items-center justify-center w-full h-full min-h-[60vh] p-6">
+            <div className="flex items-center justify-center w-full h-full min-h-[50vh] sm:min-h-[60vh] p-4 sm:p-6">
               <img
                 src={note.file_url}
                 alt={note.title}
                 className="max-w-full max-h-full object-contain rounded-lg"
-                style={{ maxHeight: "calc(90vh - 100px)" }}
+                style={{ maxHeight: "calc(95vh - 100px)" }}
               />
             </div>
           )}

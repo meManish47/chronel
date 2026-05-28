@@ -139,7 +139,7 @@ export default function TaskCard({ task, onToggle, onDelete }: TaskCardProps) {
 
       <button
         onClick={() => onDelete(task.id)}
-        className="opacity-0 group-hover:opacity-100 flex-shrink-0 p-1 rounded text-muted-foreground hover:text-destructive transition-all duration-150 mt-0.5"
+        className="opacity-100 md:opacity-0 md:group-hover:opacity-100 flex-shrink-0 p-1 rounded text-muted-foreground hover:text-destructive transition-all duration-150 mt-0.5"
       >
         <Trash2 className="h-3.5 w-3.5" />
       </button>

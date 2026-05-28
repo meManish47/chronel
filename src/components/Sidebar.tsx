@@ -16,13 +16,18 @@ const navItems = [
   { icon: FileText, label: "Notes", href: "/notes" },
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+  className?: string;
+  onClose?: () => void;
+}
+
+export default function Sidebar({ className, onClose }: SidebarProps) {
   const location = useLocation();
   const { user } = useUser();
   const { signOut } = useClerk();
 
   return (
-    <aside className="flex h-screen w-60 flex-col border-r border-sidebar-border bg-sidebar">
+    <aside className={cn("flex h-screen w-60 flex-col border-r border-sidebar-border bg-sidebar", className)}>
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-6 py-6 border-b border-sidebar-border">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
@@ -41,6 +46,7 @@ export default function Sidebar() {
             <Link
               key={href}
               to={href}
+              onClick={onClose}
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
                 active
@@ -70,13 +76,19 @@ export default function Sidebar() {
         <SignedOut>
           <div className="flex flex-col gap-2">
             <SignInButton mode="modal">
-              <button className="flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-sm bg-primary text-white hover:bg-primary-glow transition-colors">
+              <button
+                onClick={onClose}
+                className="flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-sm bg-primary text-white hover:bg-primary-glow transition-colors"
+              >
                 <LogIn className="h-3.5 w-3.5" />
                 Sign In
               </button>
             </SignInButton>
             <SignUpButton mode="modal">
-              <button className="flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-sm border border-border hover:bg-sidebar-accent transition-colors">
+              <button
+                onClick={onClose}
+                className="flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-sm border border-border hover:bg-sidebar-accent transition-colors"
+              >
                 Create Account
               </button>
             </SignUpButton>
@@ -98,7 +110,10 @@ export default function Sidebar() {
             </div>
           </div>
           <button
-            onClick={async () => await signOut()}
+            onClick={async () => {
+              onClose?.();
+              await signOut();
+            }}
             className="flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent transition-colors"
           >
             <LogOut className="h-3.5 w-3.5" />
